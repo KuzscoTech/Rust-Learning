@@ -117,6 +117,38 @@ fn test_case_four_matrix_manipulation() {
     println!("Transpose:\n{}", transpose(matrix));
 }
 
+fn test_case_five_array_manipulation() {
+    fn analyze_slice(slice: &[i32]) {
+        println!("first element of the slice: {}", slice[0]);
+        println!("the slice has {} elements", slice.len());
+    }
+
+    let xs: [i32; 5] = [1, 2, 3, 4, 5];
+    let ys: [i32; 500] = [0; 500];
+
+    // Indexing starts at 0
+    println!("first element of the array: {}", xs[0]);
+    println!("second element of the array: {}", xs[1]);
+
+    // `len` returns the count of elements in the array
+    println!("number of elements in array: {}", xs.len());
+
+    // Arrays are stack allocated
+    println!("array occupies {} bytes", mem::size_of_val(&xs));
+
+    // Arrays can be automatically borrowed as slices
+    println!("borrow the whole array as a slice");
+    analyze_slice(&xs);
+
+    // Slices can point to a section of an array
+    // They are of the form [starting_index..ending_index]
+    // starting_index is the first position in the slice
+    // ending_index is one more than the last position in the slice
+    println!("borrow a section of the array as a slice");
+    analyze_slice(&ys[1 .. 4]);
+    
+}
+
 fn main() {
     // println!("0011 AND 0101 is {:04b}", 0b0011u32 & 0b0101);
     // println!("0011 OR 0101 is {:04b}", 0b0011u32 | 0b0101);
@@ -126,6 +158,7 @@ fn main() {
     // test_case_one_debug_frmt();
     // test_case_two_struct_list_write();
     // test_case_three_custom_format();
-    test_case_four_matrix_manipulation();
+    // test_case_four_matrix_manipulation();
+    test_case_five_array_manipulation();
 }
 
