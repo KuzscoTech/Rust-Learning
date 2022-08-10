@@ -1,5 +1,16 @@
+#![allow(dead_code)]
 use std::fmt::{self, Formatter, Display};
 use std::mem;
+
+enum Status {
+    Rich,
+    Poor,
+}
+
+enum Work {
+    Civilian,
+    Soldier,
+}
 
 fn test_case_one_debug_frmt() {
     #[derive(Debug)]
@@ -112,6 +123,7 @@ fn test_case_four_matrix_manipulation() {
             write!(f, "( {} {} )", self.2, self.3)
         }
     }
+
     let matrix = Matrix(1.1, 1.2, 2.1, 2.2);
     println!("{}", matrix);
     println!("Transpose:\n{}", transpose(matrix));
@@ -122,7 +134,7 @@ fn test_case_five_array_manipulation() {
         println!("first element of the slice: {}", slice[0]);
         println!("the slice has {} elements", slice.len());
     }
-
+    
     let xs: [i32; 5] = [1, 2, 3, 4, 5];
     let ys: [i32; 500] = [0; 500];
 
@@ -149,6 +161,220 @@ fn test_case_five_array_manipulation() {
     
 }
 
+fn test_case_six_structs(){
+
+    fn rect_area(rectangle: Rectangle) -> f32{
+        let w: f32 = rectangle.bottom_right.y - rectangle.top_left.y;
+        println!("{}", w);
+        let l: f32 = rectangle.bottom_right.x - rectangle.top_left.x;
+        println!("{}", l);
+
+        (w*l)
+    }
+
+    fn square(point: Point, arg: f32)-> Rectangle {
+        let point_two = Point {..point};
+        let rectangle = Rectangle {
+            top_left: point,
+            bottom_right: Point {x: (point_two.x + arg), y: (point_two.y + arg)},
+        };
+        rectangle
+    }
+
+    struct Person {
+        name: String,
+        age: u8,
+    }
+    // A struct with two fields
+    struct Point {
+        x: f32,
+        y: f32,
+    }
+
+    // Structs can be reused as fields of another struct
+    struct Rectangle {
+        // A rectangle can be specified by where the top left and bottom right
+        // corners are in space.
+        top_left: Point,
+        bottom_right: Point,
+    }
+
+    let name = String::from("Kushal");
+    let age = 23;
+    let kushal = Person{name, age}; 
+
+    let point: Point = Point { x: 5.2, y: 0.0 };
+
+    // Access the fields of the point
+    println!("point coordinates: ({}, {})", point.x, point.y);
+    
+    let bottom_right = Point { x: 10.3, y: 0.4 };
+
+    // Destructure the point using a `let` binding
+    let Point { x: left_edge, y: top_edge } = point;
+
+    let _rectangle = Rectangle {
+        // struct instantiation is an expression too
+        //                 x: 5.2        y: 0
+        top_left: Point { x: left_edge, y: top_edge },
+        //              x: 10.3          y:0.4   
+        bottom_right: bottom_right,
+    };
+    println!("Rectangle: {}{}", _rectangle.top_left.x, _rectangle.top_left.y);
+    println!("Area of Rectangle: {}", rect_area(_rectangle));
+    let _square = square(point, 5.0);
+    println!("Square : ({}, {})", _square.bottom_right.x, -_square.bottom_right.y);
+    println!("Area of Square: {}", rect_area(_square));
+}
+
+fn test_case_seven_enum(){
+    enum WebEvent {
+        // An `enum` may either be `unit-like`,
+        PageLoad,
+        PageUnload,
+        // like tuple structs,
+        KeyPress(char),
+        Paste(String),
+        // or c-like structures.
+        Click { x: i64, y: i64 },
+    }
+
+    // A function which takes a `WebEvent` enum as an argument and
+    // returns nothing.
+    fn inspect(event: WebEvent) {
+        match event {
+            WebEvent::PageLoad => println!("page loaded"),
+            WebEvent::PageUnload => println!("page unloaded"),
+            // Destructure `c` from inside the `enum`.
+            WebEvent::KeyPress(c) => println!("pressed '{}'.", c),
+            WebEvent::Paste(s) => println!("pasted \"{}\".", s),
+            // Destructure `Click` into `x` and `y`.
+            WebEvent::Click { x, y } => {
+                println!("clicked at x={}, y={}.", x, y);
+            },
+        }
+    }
+
+    let pressed = WebEvent::KeyPress('x');
+    // `to_owned()` creates an owned `String` from a string slice.
+    let pasted  = WebEvent::Paste("my text".to_owned());
+    let click   = WebEvent::Click { x: 20, y: 80 };
+    let load    = WebEvent::PageLoad;
+    let unload  = WebEvent::PageUnload;
+
+    inspect(pressed);
+    inspect(pasted);
+    inspect(click);
+    inspect(load);
+    inspect(unload);
+
+
+    //Type Alias
+    enum VeryVerboseEnumOfThingsToDoWithNumbers {
+        Add,
+        Subtract,
+    }
+
+    impl VeryVerboseEnumOfThingsToDoWithNumbers {
+        fn run(&self, x: i32, y: i32) -> i32 {
+            match self {
+                Self::Add => x + y,
+                Self::Subtract => x - y,
+            }
+        }
+    }
+    // Creates a type alias
+    type Operations = VeryVerboseEnumOfThingsToDoWithNumbers;
+
+    let x = Operations::Add;
+
+    // Explicitly `use` each name so they are available without
+    // manual scoping.
+    use Status::{Poor, Rich};
+    // Automatically `use` each name inside `Work`.
+    use Work::*;
+    
+    // Equivalent to `Status::Poor`.
+    let status = Poor;
+    // Equivalent to `Work::Civilian`.
+    let work = Civilian;
+
+    // println!("{} {}", status, work);
+    match status {
+        // Note the lack of scoping because of the explicit `use` above.
+        Rich => println!("The rich have lots of money!"),
+        Poor => println!("The poor have no money..."),
+    }
+}
+
+fn test_case_eight_linkedlist(){
+    enum List {
+        // Cons: Tuple struct that wraps an element and a pointer to the next node
+        Cons(u32, Box<List>),
+        // Nil: A node that signifies the end of the linked list
+        Nil,
+    }
+
+    use  List::*;
+    // Methods can be attached to an enum
+    impl List {
+        // Create an empty list
+        fn new() -> List {
+            // `Nil` has type `List`
+            Nil
+        }
+
+        // Consume a list, and return the same list with a new element at its front
+        fn prepend(self, elem: u32) -> List {
+            // `Cons` also has type List
+            Cons(elem, Box::new(self))
+        }
+
+        // Return the length of the list
+        fn len(&self) -> u32 {
+            // `self` has to be matched, because the behavior of this method
+            // depends on the variant of `self`
+            // `self` has type `&List`, and `*self` has type `List`, matching on a
+            // concrete type `T` is preferred over a match on a reference `&T`
+            // after Rust 2018 you can use self here and tail (with no ref) below as well,
+            // rust will infer &s and ref tail. 
+            // See https://doc.rust-lang.org/edition-guide/rust-2018/ownership-and-lifetimes/default-match-bindings.html
+            match *self {
+                // Can't take ownership of the tail, because `self` is borrowed;
+                // instead take a reference to the tail
+                Cons(_, ref tail) => 1 + tail.len(),
+                // Base Case: An empty list has zero length
+                Nil => 0
+            }
+        }
+
+        // Return representation of the list as a (heap allocated) string
+        fn stringify(&self) -> String {
+            match *self {
+                Cons(head, ref tail) => {
+                    // `format!` is similar to `print!`, but returns a heap
+                    // allocated string instead of printing to the console
+                    format!("{}, {}", head, tail.stringify())
+                },
+                Nil => {
+                    format!("Nil")
+                },
+            }
+        }
+    }
+
+    let mut list = List::new();
+
+    // Prepend some elements
+    list = list.prepend(1);
+    list = list.prepend(2);
+    list = list.prepend(3);
+
+    // Show the final state of the list
+    println!("linked list has length: {}", list.len());
+    println!("{}", list.stringify());
+}
+
 fn main() {
     // println!("0011 AND 0101 is {:04b}", 0b0011u32 & 0b0101);
     // println!("0011 OR 0101 is {:04b}", 0b0011u32 | 0b0101);
@@ -159,6 +385,9 @@ fn main() {
     // test_case_two_struct_list_write();
     // test_case_three_custom_format();
     // test_case_four_matrix_manipulation();
-    test_case_five_array_manipulation();
+    // test_case_five_array_manipulation();
+    // test_case_six_structs();
+    // test_case_seven_enum();
+    test_case_eight_linkedlist();
 }
 
