@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+#![allow(overflowing_literals)]
+
 use std::fmt::{self, Formatter, Display};
 use std::mem;
 
@@ -307,72 +309,202 @@ fn test_case_seven_enum(){
     }
 }
 
-fn test_case_eight_linkedlist(){
-    enum List {
-        // Cons: Tuple struct that wraps an element and a pointer to the next node
-        Cons(u32, Box<List>),
-        // Nil: A node that signifies the end of the linked list
-        Nil,
+// fn test_case_eight_linkedlist(){
+//     enum List {
+//         // Cons: Tuple struct that wraps an element and a pointer to the next node
+//         Cons(u32, Box<List>),
+//         // Nil: A node that signifies the end of the linked list
+//         Nil,
+//     }
+
+//     use  List::*;
+//     // Methods can be attached to an enum
+//     impl List {
+//         // Create an empty list
+//         fn new() -> List {
+//             // `Nil` has type `List`
+//             Nil
+//         }
+
+//         // Consume a list, and return the same list with a new element at its front
+//         fn prepend(self, elem: u32) -> List {
+//             // `Cons` also has type List
+//             Cons(elem, Box::new(self))
+//         }
+
+//         // Return the length of the list
+//         fn len(&self) -> u32 {
+//             // `self` has to be matched, because the behavior of this method
+//             // depends on the variant of `self`
+//             // `self` has type `&List`, and `*self` has type `List`, matching on a
+//             // concrete type `T` is preferred over a match on a reference `&T`
+//             // after Rust 2018 you can use self here and tail (with no ref) below as well,
+//             // rust will infer &s and ref tail. 
+//             // See https://doc.rust-lang.org/edition-guide/rust-2018/ownership-and-lifetimes/default-match-bindings.html
+//             match *self {
+//                 // Can't take ownership of the tail, because `self` is borrowed;
+//                 // instead take a reference to the tail
+//                 Cons(_, ref tail) => 1 + tail.len(),
+//                 // Base Case: An empty list has zero length
+//                 Nil => 0
+//             }
+//         }
+
+//         // Return representation of the list as a (heap allocated) string
+//         fn stringify(&self) -> String {
+//             match *self {
+//                 Cons(head, ref tail) => {
+//                     // `format!` is similar to `print!`, but returns a heap
+//                     // allocated string instead of printing to the console
+//                     format!("{}, {}", head, tail.stringify())
+//                 },
+//                 Nil => {
+//                     format!("Nil")
+//                 },
+//             }
+//         }
+//     }
+
+//     let mut list = List::new();
+
+//     // Prepend some elements
+//     list = list.prepend(1);
+//     list = list.prepend(2);
+//     list = list.prepend(3);
+
+//     // Show the final state of the list
+//     println!("linked list has length: {}", list.len());
+//     println!("{}", list.stringify());
+// }
+
+fn test_case_nine_variable_binding() {
+    //Variables are immutable by default, adding mut makes them mutable
+    let mut mutable = 1;
+
+    println!("{}", mutable);
+    mutable += 1;
+    println!("{}", mutable);
+
+    let shadowed_binding = 1;
+    {
+        println!("before being shadowed: {}", shadowed_binding);
+        // This binding *shadows* the outer one
+        let shadowed_binding = "abc";
+        println!("shadowed in inner block: {}", shadowed_binding);
     }
 
-    use  List::*;
-    // Methods can be attached to an enum
-    impl List {
-        // Create an empty list
-        fn new() -> List {
-            // `Nil` has type `List`
-            Nil
-        }
+    println!("outside inner block: {}", shadowed_binding);
+    // This binding *shadows* the previous binding
+    let shadowed_binding = 2;
+    println!("shadowed in outer block: {}", shadowed_binding);
 
-        // Consume a list, and return the same list with a new element at its front
-        fn prepend(self, elem: u32) -> List {
-            // `Cons` also has type List
-            Cons(elem, Box::new(self))
-        }
+    //Shadow binding leads to errors, if they are not initialized in the global block after
+    //being initialized in the local block
 
-        // Return the length of the list
-        fn len(&self) -> u32 {
-            // `self` has to be matched, because the behavior of this method
-            // depends on the variant of `self`
-            // `self` has type `&List`, and `*self` has type `List`, matching on a
-            // concrete type `T` is preferred over a match on a reference `&T`
-            // after Rust 2018 you can use self here and tail (with no ref) below as well,
-            // rust will infer &s and ref tail. 
-            // See https://doc.rust-lang.org/edition-guide/rust-2018/ownership-and-lifetimes/default-match-bindings.html
-            match *self {
-                // Can't take ownership of the tail, because `self` is borrowed;
-                // instead take a reference to the tail
-                Cons(_, ref tail) => 1 + tail.len(),
-                // Base Case: An empty list has zero length
-                Nil => 0
-            }
-        }
+    //Freezing is when data is bound by the same name in different blocks, and can't be modified
+    //in the local block but can be modified in the global one
+}
 
-        // Return representation of the list as a (heap allocated) string
-        fn stringify(&self) -> String {
-            match *self {
-                Cons(head, ref tail) => {
-                    // `format!` is similar to `print!`, but returns a heap
-                    // allocated string instead of printing to the console
-                    format!("{}, {}", head, tail.stringify())
-                },
-                Nil => {
-                    format!("Nil")
-                },
-            }
+fn test_case_ten_types(){
+    let decimal = 65.4321_f32;
+
+    // Error! No implicit conversion
+    // let integer: u8 = decimal; //implicit declaration
+    // FIXME ^ Comment out this line
+
+    // Explicit conversion
+    let integer = decimal as u8;
+    let character = integer as char;
+
+    // 1000 already fits in a u16
+    println!("1000 as a u16 is: {}", 1000 as u16);
+
+    // 1000 - 256 - 256 - 256 = 232
+    // Under the hood, the first 8 least significant bits (LSB) are kept,
+    // while the rest towards the most significant bit (MSB) get truncated.
+    println!("1000 as a u8 is : {}", 1000 as u8);
+
+    // 300.0 is 255
+    println!("300.0 is {}", 300.0_f32 as u8);
+    // -100.0 as u8 is 0
+    println!("-100.0 as u8 is {}", -100.0_f32 as u8);
+    // nan as u8 is 0
+    println!("nan as u8 is {}", f32::NAN as u8);
+
+    // Suffixed literals, their types are known at initialization
+    let x = 1u8;
+    let y = 2u32;
+    let z = 3f32;
+
+    // Unsuffixed literals, their types depend on how they are used
+    let i = 1;
+    let f = 1.0;
+
+    // `size_of_val` returns the size of a variable in bytes
+    println!("size of `x` in bytes: {}", std::mem::size_of_val(&x));
+    println!("size of `y` in bytes: {}", std::mem::size_of_val(&y));
+    println!("size of `z` in bytes: {}", std::mem::size_of_val(&z));
+    println!("size of `i` in bytes: {}", std::mem::size_of_val(&i));
+    println!("size of `f` in bytes: {}", std::mem::size_of_val(&f));
+}
+
+fn test_case_eleven_conversions() {
+    let my_str = "hello";
+    let my_string = String::from(my_str); //Default Conversion
+
+
+    //Initialize int
+    let int = 5;
+    //Custom Conversion
+    #[derive(Debug)]
+    struct Number {
+    value: i32,
+    }
+
+    impl From<i32> for Number {
+        fn from(item: i32) -> Self {
+            Number { value: item }
         }
     }
 
-    let mut list = List::new();
+    let num = Number::from(30);
+    println!("My number is {:?}", num);
 
-    // Prepend some elements
-    list = list.prepend(1);
-    list = list.prepend(2);
-    list = list.prepend(3);
+    let num_two: Number = int.into();
+    println!("Number : {:?}", num_two);
 
-    // Show the final state of the list
-    println!("linked list has length: {}", list.len());
-    println!("{}", list.stringify());
+    //TryFrom & TryInto
+    use std::convert::TryFrom;
+    use std::convert::TryInto;
+    
+    #[derive(Debug, PartialEq)]
+    struct EvenNumber(i32);
+
+    impl TryFrom<i32> for EvenNumber {
+        type Error = ();
+    
+        fn try_from(value: i32) -> Result<Self, Self::Error> {
+            if value % 2 == 0 {
+                Ok(EvenNumber(value))
+            } else {
+                Err(())
+            }
+        }
+    }
+    println!("Even Number: {:?}", EvenNumber::try_from(8));
+    println!("Even Number: {:?}", EvenNumber::try_from(3));
+
+    let result: Result<EvenNumber, ()> = 8i32.try_into();
+    assert_eq!(result, Ok(EvenNumber(8)));
+    let result: Result<EvenNumber, ()> = 5i32.try_into();
+    assert_eq!(result, Err(()));
+
+    //Parsing a String
+    let parsed: i32 = "5".parse().unwrap();
+    let turbo_parsed = "10".parse::<i32>().unwrap();
+
+    let sum = parsed + turbo_parsed;
+    println!("Sum: {:?}", sum);
 }
 
 fn main() {
@@ -388,6 +520,9 @@ fn main() {
     // test_case_five_array_manipulation();
     // test_case_six_structs();
     // test_case_seven_enum();
-    test_case_eight_linkedlist();
+    // test_case_eight_linkedlist();
+    // test_case_nine_variable_binding();
+    // test_case_ten_types();
+    test_case_eleven_conversions();
 }
 
